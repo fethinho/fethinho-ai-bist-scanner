@@ -98,8 +98,7 @@ async def main():
         time_str = now.strftime("%H:%M")
         img_path = "fethinho_ai_gunluk.png"
         create_fethinho_image(uygun_hisseler, date_str, time_str, img_path)
-        msg = f"🚀 Fethinho AI Günlük Tarama Sonuçları ({date_str})
-{len(uygun_hisseler)} adet güçlü sinyal bulundu."
+                msg = "Fethinho AI Gunluk Tarama - " + date_str + "\n" + str(len(uygun_hisseler)) + " adet guclu sinyal bulundu."
         await send_telegram(msg, img_path)
     else:
         print("Uygun hisse bulunamadı.")
