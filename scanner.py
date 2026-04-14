@@ -30,9 +30,9 @@ def create_fethinho_image(rows, date_str, time_str, out_file="fethinho_ai_gunluk
     ax.set_xlim(0, 100)
     ax.set_ylim(0, 100)
     ax.axis("off")
-    ax.text(50, 93, "FETHİNH0 AI GÜNLÜK TARAMA", ha="center", va="center", fontsize=26, color="#ffd87a", weight="bold")
-    ax.text(50, 86, "GÜÇLÜ AL SİNYALLERİ", ha="center", va="center", fontsize=20, color="#00ffff", weight="bold")
-    ax.text(50, 80, f"{date_str} | {time_str} (UTC+3)", ha="center", va="center", fontsize=13, color="#ffffff")
+    ax.text(50, 93, "FETHINHO AI GUNLUK TARAMA", ha="center", va="center", fontsize=26, color="#ffd87a", weight="bold")
+    ax.text(50, 86, "GUCLU AL SINYALLERi", ha="center", va="center", fontsize=20, color="#00ffff", weight="bold")
+    ax.text(50, 80, date_str + " | " + time_str + " (UTC+3)", ha="center", va="center", fontsize=13, color="#ffffff")
     panel_x, panel_y = 15, 12
     panel_w, panel_h = 70, 62
     rect = Rectangle((panel_x, panel_y), panel_w, panel_h, linewidth=2.5, edgecolor="#00ffff", facecolor=(0, 0, 0, 0.6))
@@ -45,38 +45,42 @@ def create_fethinho_image(rows, date_str, time_str, out_file="fethinho_ai_gunluk
     dy = 6.0
     for i, r in enumerate(rows):
         y = start_y - i * dy
-        if y < panel_y + 6: break
+        if y < panel_y + 6:
+            break
         ax.text(cols_x[0], y, str(i+1), ha="center", color="#ffffff", fontsize=12)
         ax.text(cols_x[1], y, r["sembol"], ha="center", color="#ffffff", weight="bold", fontsize=15)
-        ax.text(cols_x[2], y, f"{r['fiyat']:.2f}", ha="center", color="#ffff00", fontsize=13, weight="bold")
-        ax.text(cols_x[3], y, f"{r['rsi']:.2f}", ha="center", color="#ffffff", fontsize=13)
-        ax.text(cols_x[4], y, "Güçlü al", ha="center", color="#00ff00", fontsize=13, weight="bold")
-    msg = "Grafiğe değil, sisteme sadık kalan kazandı. Disiplin = Güç."
+        ax.text(cols_x[2], y, str(round(r["fiyat"], 2)), ha="center", color="#ffff00", fontsize=13, weight="bold")
+        ax.text(cols_x[3], y, str(round(r["rsi"], 2)), ha="center", color="#ffffff", fontsize=13)
+        ax.text(cols_x[4], y, "Guclu al", ha="center", color="#00ff00", fontsize=13, weight="bold")
+    msg = "Grafige degil, sisteme sadik kalan kazandi. Disiplin = Guc."
     ax.text(50, panel_y + 3, msg, ha="center", va="center", fontsize=12, color="#00ffff", style="italic", weight="bold")
     plt.tight_layout()
     fig.savefig(out_file, dpi=200, bbox_inches="tight")
     plt.close(fig)
 
 async def main():
-    # Tickers listesi (Colab'den alınacak veya burada tanımlanacak)
-    # Kısaltılmış liste örnek olarak
-    tickers = ["ARDYZ.IS", "CEOEM.IS", "TCELL.IS", "THYAO.IS", "EREGL.IS", "ASELS.IS", "AKBNK.IS", "ISCTR.IS", "GARAN.IS", "KCHOL.IS"] 
-    # Not: Gerçekte tüm listeyi Colab'den kopyalayıp buraya koymak daha iyi olur.
-    
+    tickers = [
+        "ARDYZ.IS", "CEOEM.IS", "TCELL.IS", "THYAO.IS", "EREGL.IS",
+        "ASELS.IS", "AKBNK.IS", "ISCTR.IS", "GARAN.IS", "KCHOL.IS",
+        "TUPRS.IS", "BIMAS.IS", "SAHOL.IS", "SISE.IS", "KOZAL.IS",
+        "PETKM.IS", "FROTO.IS", "TOASO.IS", "ENKAI.IS", "EKGYO.IS"
+    ]
     uygun_hisseler = []
     for ticker in tickers:
         try:
             df = yf.download(ticker, period="1y", interval="1d", progress=False, auto_adjust=True)
-            if df.empty or len(df) < 50: continue
-            if isinstance(df.columns, pd.MultiIndex): df.columns = df.columns.droplevel(1)
+            if df.empty or len(df) < 50:
+                continue
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.droplevel(1)
             df["EMA_20"] = ta.ema(df["Close"], length=20)
             df["EMA_50"] = ta.ema(df["Close"], length=50)
             df["RSI_14"] = ta.rsi(df["Close"], length=14)
             df["Vol_Ort_10"] = ta.sma(df["Volume"], length=10)
-            if len(df) < 2: continue
+            if len(df) < 2:
+                continue
             son_gun = df.iloc[-1]
             onceki_gun = df.iloc[-2]
-            
             fiyat = son_gun["Close"]
             ema20_bugun = son_gun["EMA_20"]
             ema50_bugun = son_gun["EMA_50"]
@@ -85,23 +89,25 @@ async def main():
             rsi = son_gun["RSI_14"]
             hacim = son_gun["Volume"]
             hacim_ort = son_gun["Vol_Ort_10"]
-            
-            if pd.isna(ema50_bugun) or pd.isna(ema20_bugun) or pd.isna(rsi): continue
-            
-            if fiyat >= ema20_bugun and 40 < rsi < 89 and hacim > hacim_ort and ema20_dun <= ema50_dun and ema20_bugun > ema50_bugun:
-                uygun_hisseler.append({"sembol": ticker, "fiyat": fiyat, "rsi": rsi})
-        except: continue
-    
+            if pd.isna(ema50_bugun) or pd.isna(ema20_bugun) or pd.isna(rsi):
+                continue
+            if (fiyat >= ema20_bugun and 40 < rsi < 89 and
+                    hacim > hacim_ort and
+                    ema20_dun <= ema50_dun and
+                    ema20_bugun > ema50_bugun):
+                uygun_hisseler.append({"sembol": ticker, "fiyat": float(fiyat), "rsi": float(rsi)})
+        except Exception:
+            continue
     if uygun_hisseler:
         now = datetime.utcnow() + timedelta(hours=3)
         date_str = now.strftime("%d.%m.%Y")
         time_str = now.strftime("%H:%M")
         img_path = "fethinho_ai_gunluk.png"
         create_fethinho_image(uygun_hisseler, date_str, time_str, img_path)
-                msg = "Fethinho AI Gunluk Tarama - " + date_str + "\n" + str(len(uygun_hisseler)) + " adet guclu sinyal bulundu."
+        msg = "Fethinho AI Gunluk Tarama - " + date_str + "\n" + str(len(uygun_hisseler)) + " adet guclu sinyal bulundu."
         await send_telegram(msg, img_path)
     else:
-        print("Uygun hisse bulunamadı.")
+        await send_telegram("Bugun uygun hisse bulunamadi.")
 
 if __name__ == "__main__":
     asyncio.run(main())
